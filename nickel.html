@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>S|A- Daily Sentiment Analyzer</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="Free Website Template" name="keywords">
+    <meta content="Free Website Template" name="description">
+
+    <!-- Favicon -->
+    <link href="img/favicon.ico" rel="icon">
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;400&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Libraries Stylesheet -->
+    <link href="lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
+    <link href="lib/tempusdominus/css/tempusdominus-bootstrap-4.min.css" rel="stylesheet" />
+
+    <!-- Customized Bootstrap Stylesheet -->
+    <link href="css/style.min.css" rel="stylesheet">
+
+    <!-- ApexCharts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <style>
+        .chart-container {
+            background: #1f1f1f; /* Matching background */
+            border-radius: 20px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* Increased shadow */
+            padding: 20px;
+        }
+    </style>
+    <script>async function fetchNews() {
+        const apiKey = '7091e74e8caa58d354c80f871bd9fa3a'; // Replace with your GNews API key
+        const response = await fetch(`https://gnews.io/api/v4/search?q=Critical+Metal+earth&token=${apiKey}&lang=en&sortby=publishedAt&from=2023-05-10`);
+        const data = await response.json();
+        return data.articles;
+    }
+
+    function displayNews(articles) {
+        const newsContainer = document.getElementById('news-container');
+        newsContainer.innerHTML = ''; // Clear any existing content
+
+        articles.forEach(article => {
+            const newsItem = document.createElement('div');
+            newsItem.className = 'col-lg-6 mb-5';
+            newsItem.innerHTML = `
+                <div class="row align-items-center" style="height: 186px;">
+                    <div class="col-sm-5">
+                        <img class="img-fluid mb-3 mb-sm-0" src="${article.image}" alt="News Image" style="width: 200%; height: 300%; object-fit: cover;">
+                    </div>
+                    <div class="col-sm-7">
+                        <h4>${article.title}</h4>
+                        <p class="m-0">${new Date(article.publishedAt).toLocaleDateString()}</p>
+                        <p class="m-0">${article.description}</p>
+                        <a href="${article.url}" target="_blank">Read more</a>
+                    </div>
+                </div>
+            `;
+            newsContainer.appendChild(newsItem);
+        });
+    }
+
+    async function loadNews() {
+        const articles = await fetchNews();
+        displayNews(articles);
+    }
+
+    window.onload = () => {
+        plotChart();
+        loadNews();
+    };
+        async function fetchCSVData(url) {
+            try {
+                const response = await fetch(url);
+                const data = await response.text();
+                return parseCSVData(data);
+            } catch (error) {
+                console.error('Error fetching the CSV data:', error);
+                return [];
+            }
+        }
+
+        function parseCSVData(data) {
+            const rows = data.split('\n').slice(1); // Skip the header row
+            return rows.map(row => {
+                const cols = row.split(',');
+                if (cols.length < 2) return null; // Skip malformed rows
+                const [date, avg] = cols;
+                return {
+                    date: date.trim(),
+                    avg: parseFloat(avg.trim())
+                };
+            }).filter(item => item).slice(0, 5); // Remove null values and take only the first 5 items
+        }
+
+        async function createChart(chartId, csvUrl, chartType) {
+            let data = await fetchCSVData(csvUrl);
+            if (!data || data.length === 0) {
+                console.error('No data available.');
+                return;
+            }
+
+            // Reverse the data only for chart 1
+            if (chartId === '#chart1') {
+                data = data.reverse();
+            }
+
+            const options = {
+                chart: {
+                    type: chartType,
+                    height: 400,
+                    zoom: {
+                        enabled: true
+                    },
+                    background: '#1f1f1f', // Matching the background color
+                    toolbar: {
+                        show: false
+                    },
+                    foreColor: '#fff',
+                    borderRadius: 20, // Adjusted border radius to match the image
+                    dropShadow: {
+                        enabled: true,
+                        top: 4, /* Increased shadow */
+                        left: 4, /* Increased shadow */
+                        blur: 8, /* Increased shadow */
+                        opacity: 0.3
+                    }
+                },
+                series: [{
+                    name: chartId === '#chart1' ? 'Price of Nickel' : 'Sentiment Over Time',
+                    data: data.map(d => ({ x: d.date, y: d.avg })) // Use reversed data for chart 1 if applicable
+                }],
+                title: {
+                    text: chartId === '#chart1' ? 'Nickel Price' : 'Sentiment Over Time',
+                    align: 'center',
+                    style: {
+                        fontSize: '24px', // Adjusted font size to match the image
+                        fontWeight: 'bold',
+                        color: '#fff'
+                    }
+                },
+                subtitle: {
+                    text: chartId === '#chart1' ? 'Last 5- days' : '',
+                    align: 'center',
+                    style: {
+                        fontSize: '14px',
+                        color: '#fff'
+                    }
+                },
+                xaxis: {
+                    type: 'category',
+                    title: {
+                        text: chartId === '#chart1' ? 'Date' : 'Hour',
+                        style: {
+                            fontSize: '14px',
+                            fontWeight: 'bold',
+                            color: '#fff'
+                        }
+                    },
+                    labels: {
+                        style: {
+                            colors: '#fff'
+                        }
+                    },
+                    axisBorder: {
+                        show: false
+                    },
+                    axisTicks: {
+                        show: false
+                    }
+                },
+                yaxis: {
+                    title: {
+                        text: chartId === '#chart1' ? 'Price (USD/mt)' : 'Sentiment Score',
+                        style: {
+                            fontSize: '14px',
+                            fontWeight: 'bold',
+                            color: '#fff'
+                        }
+                    },
+                    labels: {
+                        style: {
+                            colors: '#fff'
+                        }
+                    },
+                    axisBorder: {
+                        show: false
+                    },
+                    axisTicks: {
+                        show: false
+                    }
+                },
+                tooltip: {
+                    x: {
+                        format: chartId === '#chart1' ? 'dd MMM yyyy' : 'HH:mm'
+                    }
+                },
+                theme: {
+                    mode: 'dark'
+                },
+                stroke: {
+                    width: 3, // Adjusted stroke width to match the image
+                    curve: 'smooth', // Smooth curve to match the image
+                    colors: ['#00E396'] // Matching line color
+                },
+                markers: {
+                    size: 0, // Removed markers to match the image
+                    hover: {
+                        size: 5
+                    }
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                grid: {
+                    borderColor: '#444',
+                    strokeDashArray: 5
+                },
+                fill: {
+                    type: 'gradient',
+                    gradient: {
+                        shade: 'dark',
+                        type: 'vertical',
+                        shadeIntensity: 0.5,
+                        gradientToColors: ['#00E396'], // Adjusted gradient to match the image
+                        opacityFrom: 0.7,
+                        opacityTo: 0.3, // Adjusted gradient opacity to create the fade effect
+                        stops: [0, 100]
+                    }
+                }
+            };
+
+            const chart = new ApexCharts(document.querySelector(chartId), options);
+            chart.render();
+        }
+
+        window.onload = () => {
+            createChart('#chart1', 'Lidatabase.csv', 'line');
+            createChart('#chart2', 'ss.csv', 'bar');
+        };
+
+        
+    </script>
+
+</head>
+
+<body>
+    <!-- Navbar Start -->
+    <div class="container-fluid p-0 nav-bar">
+        <nav class="navbar navbar-expand-lg bg-none navbar-dark py-3">
+            <a href="index.html" class="navbar-brand px-lg-4 m-0">
+                <h1 class="m-0 display-4 text-uppercase text-white">S|A</h1>
+            </a>
+            <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarCollapse">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-between" id="navbarCollapse">
+                <div class="navbar-nav ml-auto p-4">
+                    <a href="index.html" class="nav-item nav-link">Home</a>
+                    <a href="about.html" class="nav-item nav-link">About</a>
+                    <a href="service.html" class="nav-item nav-link active">Service</a>
+                    <a href="menu.html" class="nav-item nav-link">Commodities</a>
+                    <div class="nav-item dropdown">
+                        <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">Pages</a>
+                        <div class="dropdown-menu text-capitalize">
+                            <a href="reservation.html" class="dropdown-item">Consult Us</a>
+                            <a href="testimonial.html" class="dropdown-item">Testimonial</a>
+                        </div>
+                    </div>
+                    <a href="contact.html" class="nav-item nav-link">Contact</a>
+                </div>
+            </div>
+        </nav>
+    </div>
+    <!-- Navbar End -->
+
+    <!-- Page Header Start -->
+    <div class="container-fluid page-header mb-5 position-relative overlay-bottom">
+        <div class="d-flex flex-column align-items-center justify-content-center pt-0 pt-lg-5" style="min-height: 400px">
+            <h1 class="display-4 mb-3 mt-0 mt-lg-5 text-white text-uppercase"></h1>
+            <div class="d-inline-flex mb-lg-5">
+                <p class="m-0 text-white"><a class="text-white" href="index.html">Home</a></p>
+                <p class="m-0 text-white px-2">/</p>
+                <p class="m-0 text-white">Nickel</p>
+            </div>
+        </div>
+    </div>
+    <!-- Page Header End -->
+
+    <!-- Chart Start -->
+    <div class="container-fluid pt-5">
+        <div class="container">
+            <div class="section-title text-center mb-5">
+                <h4 class="text-primary text-uppercase" style="letter-spacing: 5px;">Nickel Price Variation</h4>
+                <h1 class="display-4"></h1>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="chart-container">
+                        <div id="chart1"></div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="chart-container">
+                        <div id="chart2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Chart End -->
+
+    <!-- Service Start -->
+    <div class="container-fluid pt-5">
+        <div class="container">
+            <div class="section-title">
+                <h4 class="text-primary text-uppercase" style="letter-spacing: 5px;">News & Market Updates</h4>
+                <h1 class="display-4"></h1>
+            </div>
+            <div class="row" id="news-container">
+                <!-- News articles will be injected here -->
+            </div>
+        </div>
+    </div>
+    <!-- Service End -->
+
+    <!-- Footer Start -->
+    <div class="container-fluid bg-dark text-white mt-5 py-5 px-sm-3 px-md-5">
+        <div class="row pt-5">
+            <div class="col-lg-3 col-md-6 mb-5">
+                <h4 class="text-primary text-uppercase mb-4" style="letter-spacing: 5px;">Get In Touch</h4>
+                <p><i class="fa fa-map-marker-alt mr-2"></i>D-184, LOHUM, INDIA</p>
+                <p><i class="fa fa-phone-alt mr-2"></i>+012 345 67890</p>
+                <p><i class="fa fa-envelope mr-2"></i>info@example.com</p>
+                <div class="d-flex justify-content-start mt-4">
+                    <a class="btn btn-outline-light btn-square mr-2" href="#"><i class="fab fa-twitter"></i></a>
+                    <a class="btn btn-outline-light btn-square mr-2" href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a class="btn btn-outline-light btn-square mr-2" href="#"><i class="fab fa-linkedin-in"></i></a>
+                    <a class="btn btn-outline-light btn-square" href="#"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-5">
+                <h4 class="text-primary text-uppercase mb-4" style="letter-spacing: 5px;">Our Services</h4>
+                <div class="d-flex flex-column justify-content-start">
+                    <a class="text-white mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Market Analysis</a>
+                    <a class="text-white mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>News & Updates</a>
+                    <a class="text-white mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Price Tracking</a>
+                    <a class="text-white" href="#"><i class="fa fa-angle-right mr-2"></i>Daily Sentiment Analyzer</a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-5">
+                <h4 class="text-primary text-uppercase mb-4" style="letter-spacing: 5px;">Useful Links</h4>
+                <div class="d-flex flex-column justify-content-start">
+                    <a class="text-white mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Private Policy</a>
+                    <a class="text-white mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Terms & Conditions</a>
+                    <a class="text-white mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>New Member Registration</a>
+                    <a class="text-white mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Affiliate Marketing</a>
+                    <a class="text-white" href="#"><i class="fa fa-angle-right mr-2"></i>Help & FQAs</a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-5">
+                <h4 class="text-primary text-uppercase mb-4" style="letter-spacing: 5px;">Newsletter</h4>
+                <p>Sign up for our newsletter to stay up to date with the latest news and offers!</p>
+                <div class="w-100">
+                    <div class="input-group">
+                        <input type="text" class="form-control border-light" style="padding: 25px;" placeholder="Your Email Address">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary text-uppercase px-3">Sign Up</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="container border-top border-dark pt-5">
+            <p class="m-0 text-center text-white">&copy; <a class="text-primary font-weight-bold" href="#">DETx</a>. All Rights Reserved. <a class="text-primary font-weight-bold" href="https://hx.com"></a></p>
+        </div>
+    </div>
+    <!-- Footer End -->
+
+    <!-- Back to Top -->
+    <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="fa fa-angle-double-up"></i></a>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://stackpath.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
+    <script src="lib/easing/easing.min.js"></script>
+    <script src="lib/waypoints/waypoints.min.js"></script>
+    <script src="lib/owlcarousel/owl.carousel.min.js"></script>
+    <script src="lib/tempusdominus/js/moment.min.js"></script>
+    <script src="lib/tempusdominus/js/moment-timezone.min.js"></script>
+    <script src="lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js"></script>
+
+    <!-- Contact Javascript File -->
+    <script src="mail/jqBootstrapValidation.min.js"></script>
+    <script src="mail/contact.js"></script>
+
+    <!-- Template Javascript -->
+    <script src="js/main.js"></script>
+</body>
+
+</html>

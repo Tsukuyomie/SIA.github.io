@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>DetX - Daily Sentiment Analyzer</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="Free Website Template" name="keywords">
+    <meta content="Free Website Template" name="description">
+
+    <!-- Favicon -->
+    <link href="img/favicon.ico" rel="icon">
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;400;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Libraries Stylesheet -->
+    <link href="lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
+    <link href="lib/tempusdominus/css/tempusdominus-bootstrap-4.min.css" rel="stylesheet" />
+
+    <!-- Customized Bootstrap Stylesheet -->
+    <link href="css/style2.css" rel="stylesheet">
+
+    <style>
+        .search-bar {
+            display: flex;
+            align-items: center;
+        }
+    
+        .search-input {
+            border-radius: 30px 0 0 30px;
+            transition: box-shadow 0.3s ease;
+        }
+    
+        .search-input:focus {
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+    
+        .search-button {
+            border-radius: 0 30px 30px 0;
+            transition: background-color 0.3s ease;
+        }
+    
+        .search-button:hover {
+            background-color: #28a745;
+            color: white;
+        }
+    
+        .card-container {
+            position: absolute;
+            top: calc(50% + 50px);
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 0 50px;
+        }
+    
+        .card {
+            width: 900px;
+            height: 600px;
+            margin: 0 20px;
+            /* Add margin between cards */
+            background: rgba(101, 78, 184, 0.7);
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            overflow: visible;
+            position: relative;
+        }
+    
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+    
+        .left-card {
+            align-self: flex-start;
+        }
+    
+        .right-card {
+            align-self: flex-end;
+        }
+    
+        .logo {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 2.5em;
+            letter-spacing: 2px;
+            color: #ffffff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+    
+        .report-container {
+            position: absolute;
+            bottom: -30px;
+            left: -30px;
+            width: 60%;
+            height: 80%;
+            overflow: visible;
+            transition: all 0.3s ease;
+            z-index: 20; /* Ensure the image is above other elements */
+        }
+    
+        .report-thumbnail {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 10px; /* Rounded corners for the container */
+            overflow: hidden; /* Ensure content doesn't overflow rounded corners */
+        }
+    
+        .report-thumbnail:hover {
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            transform: translateY(-10px);
+        }
+    
+        .report-thumbnail h5 {
+            margin: 10px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+    
+        .report-thumbnail img {
+            width: 100%;
+            top: 10px;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px; /* Rounded corners for the image */
+            transition: all 0.3s ease;
+        }
+    
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+            100% {
+                transform: translateY(0px);
+            }
+        }
+    
+        .report-container:hover .report-thumbnail {
+            animation: float 3s ease-in-out infinite;
+        }
+    
+        .report-thumbnail:hover img {
+            transform: scale(1.05);
+        }
+    
+        .report-thumbnail:hover h5 {
+            color: #007bff;
+        }
+    
+        .carousel-container {
+            position: relative;
+        }
+    
+        .qr-code-right {
+            position: absolute;
+            left: -80px;
+            top: -80px;
+            width: 100px;
+            height: 100px;
+        }
+    
+        .qr-code {
+            position: absolute;
+            right: -120px;
+            bottom: -100px;
+            width: 200px;
+            height: 200px;
+            z-index: 50; /* Ensure the image is above other elements */
+            
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); /* Shadow effect */
+        }
+
+    
+        .report-container-right {
+            position: absolute;
+            top: -30px;
+            right: -30px;
+            width: 50%;
+            height: 80%;
+            overflow: visible;
+            transition: all 0.3s ease;
+        }
+    
+        .research-image {
+            position: absolute;
+            top: 20px; /* Adjust top position as needed */
+            right: 40px; /* Adjust right position as needed */
+            max-width: 500px; /* Adjust max-width of the image */
+            border-radius: 8px; /* Optional: Add rounded corners */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Optional: Add a subtle shadow */
+            transition: transform 0.3s ease-in-out; /* Optional: Add a smooth transition */
+            border: 1px solid #141212; /* Add a 2px solid border with light gray color */
+            border-radius: 8px; /* Optional: Add rounded corners for a softer look */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+    
+        
+        .second-thumbnail {
+            position: absolute;
+            bottom: -100px; /* Adjust distance from the bottom */
+            left: -20px; /* Adjust distance from the left */
+            width: 300px; /* Adjust size as needed */
+            height: 450px; /* Adjust size as needed */
+        }
+    
+        .bottom-right-text {
+    position: absolute;
+    bottom: 130px;
+    right: 10px;
+    font-size: 14px;
+    font-family: 'Times New Roman', Times, serif;
+    color: rgb(0, 0, 0); /* Semi-transparent dark gray */
+    z-index: 30;
+    background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent white background */
+    padding: 5px 10px;
+    border-radius: 5px;
+    height: 150px;
+    width: 260px;
+    opacity: 10; /* Start invisible */
+    transition: opacity 0.3s ease; /* Smooth transition for opacity */
+    
+    /* Add shadow */
+    box-shadow: 0 2px 5px rgb(255, 255, 255); /* Horizontal offset, vertical offset, blur radius, color */
+}
+
+        .bottom-right-text3 {
+        position: absolute;
+        bottom: 170px;
+        right: 460px;
+        font-size: 14px;
+        font-family: 'Times New Roman', Times, serif;
+        color: rgb(0, 0, 0); /* Semi-transparent dark gray */
+        z-index: 30;
+        background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent white background */
+        padding: 5px 10px;
+        border-radius: 5px;
+        height: 110px;
+        width: 200px;
+        opacity: 0; /* Start invisible */
+        animation: fadeIn 1s ease forwards; /* Animation properties */
+        box-shadow: 0 2px 5px rgb(255, 255, 255); /* Horizontal offset, vertical offset, blur radius, color */
+    }
+
+    @keyframes fadeIn {
+        0% {
+            opacity: 0;
+        }
+        100% {
+            opacity: 1;
+        }
+    }
+
+    .bottom-right-text3 ul {
+        list-style-type: none; /* Remove default bullets */
+        padding-left: 0; /* Remove default padding */
+    }
+
+    .bottom-right-text3 ul li {
+        margin-bottom: 10px; /* Adjust margin between items */
+    }
+
+    .bottom-right-text3 ul li:before {
+        content: "\2713"; /* Unicode character for tick mark */
+        color: green; /* Color of the tick mark */
+        margin-right: 5px; /* Space between tick mark and text */
+    }
+    
+        .bottom-right-text2 {
+            position: absolute;
+            bottom: 410px;
+            right: 390px;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 14px;
+            color: rgb(0, 0, 0); /* Semi-transparent dark gray */
+            z-index: 30;
+            background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent white background */
+            padding: 10px 15px;
+            border-radius: 10px;
+            height: 120px;
+            width: 270px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow */
+            transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition */
+            box-shadow: 0 2px 5px rgb(255, 255, 255); /* Horizontal offset, vertical offset, blur radius, color */
+        }
+    
+        .bottom-right-text2:hover {
+            transform: translateY(-10px); /* Lift on hover */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* More pronounced shadow */
+        }
+    
+        .bottom-right-text2:active {
+            transform: translateY(-5px); /* Slightly lower lift on click */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Return to soft shadow */
+        }
+        
+        
+        
+    
+    </style>
+    
+    
+
+</head>
+
+<body>
+    <!-- Navbar Start -->
+    <div class="container-fluid p-0 nav-bar">
+        <nav class="navbar navbar-expand-lg bg-none navbar-dark py-3">
+            <a href="index.html" class="navbar-brand px-lg-4 m-0">
+                <h1 class="m-0 display-4 text-uppercase text-white logo" style="font-family: 'Times New Roman', Times, serif;">
+                    DetX</h1>
+                <h6 class="m-0 text-case text-white">Charging up your Market Insights</h6>
+            </a>
+            <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarCollapse">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-between" id="navbarCollapse">
+                <div class="navbar-nav ml-auto p-4">
+                    <a href="index.html" class="nav-item nav-link active">Home</a>
+                    <a href="menu.html" class="nav-item nav-link">Commodities</a>
+                    <a href="intheknow.html" class="nav-item nav-link">In The Know!</a>
+                    <a href="contact.html" class="nav-item nav-link">Contact</a>
+                </div>
+                <form class="form-inline ml-3 my-lg-0 search-bar" id="searchForm">
+                    <input class="form-control mr-sm-2 search-input" type="search" placeholder="Search" aria-label="Search" id="searchInput">
+                    <button class="btn btn-outline-success my-2 my-sm-0 search-button" type="submit">Search</button>
+                </form>
+                <div id="searchResults"></div>
+            </div>
+        </nav>
+    </div>
+    <!-- Navbar End -->
+
+<!-- Cards Start -->
+<div class="card-container">
+    <div class="card left-card">
+        <h4 style="text-align: justify;">Research & Analytics</h4>
+        <!-- Add your image here -->
+        
+        <div class="report-container">
+            <div class="report-thumbnail">
+                <img src="nl3.png" alt="Report Thumbnail">
+            </div>
+        </div>
+        <img src="graph9.png" alt="Research Image" class="research-image" height="250" width="350">
+        <!--<img src="graph1.png" alt="Research Image" class="research-image2" height="250" width="350">
+        <img src="graph3.png" alt="Research Image" class="research-image3" height="250" width="350">-->
+        <div class="qr-code">
+            <img src="QR.png" alt="QR Code" height="200" width="200">
+        </div>
+        <div class="bottom-right-text" style="text-align: justify;"><b>DETX</b> is deeply embedded in the commodities and energy industries, enabling us to provide expert research and analysis that empowers our clients to navigate complex markets with confidence.</div>
+    </div>
+    <div class="card right-card">
+        <h4 style="text-align: justify;">IN THE KNOW!</h4>
+        <div class="bottom-right-text2" style="text-align: justify;">As an industry insider with our finger on the pulse of the market, our newsletter provides <b>cutting-edge insights</b> and <b>forecasts</b>  to keep you ahead of the curve.</div>
+        <div class="bottom-right-text3" style="text-align: justify;">
+            <ul>
+                <li>Featured Content & Updates</li>
+                <li>Engaging visuals & Data</li>   
+                <li>Call to Action (CTA)</li>    
+            </ul>
+        </div>
+    
+        
+        <div class="report-container-right">
+            <div class="report-thumbnail">
+                <img src="nl3.png" alt="Report Thumbnail">
+            </div>
+            
+            <!-- New thumbnail -->
+            <div class="report-thumbnail second-thumbnail">
+                <img src="nl2.png" alt="Report Thumbnail">
+            </div>
+        </div>
+        
+        <div class="qr-code-right">
+            <!--<img src="png" alt="" height="100" width="100">-->
+        </div>
+    </div>
+</div>
+ 
+
+    <!-- Carousel Start -->
+    <div class="carousel-container">
+        <div class="container-fluid p-0 mb-5">
+            <div id="blog-carousel" class="carousel slide overlay-bottom" data-ride="carousel" data-interval="2000">
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <img class="w-100" src="bg2.jpg" alt="Image">
+                        <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
+                            <h2 class="text-primary font-weight-medium m-0"></h2>
+                            <h1 class="display-1 text-white m-0">NICKEL</h1>
+                            <h2 class="text-white m-0"></h2>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <img class="w-100" src="bg.jpg" alt="Image">
+                        <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
+                            <h2 class="text-primary font-weight-medium m-0"></h2>
+                            <h1 class="display-1 text-white m-0">LITHIUM</h1>
+                            <h2 class="text-white m-0"></h2>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <img class="w-100" src="bg.jpg" alt="Image">
+                        <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
+                            <h2 class="text-primary font-weight-medium m-0"></h2>
+                            <h1 class="display-1 text-white m-0">CME</h1>
+                            <h2 class="text-white m-0"></h2>
+                        </div>
+                    </div>
+                    <div class="carousel-item">
+                        <img class="w-100" src="bg.jpg" alt="Image">
+                        <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
+                            <h2 class="text-primary font-weight-medium m-0"></h2>
+                            <h1 class="display-1 text-white m-0">COBALT</h1>
+                            <h2 class="text-white m-0"></h2>
+                        </div>
+                    </div>
+                </div>
+                <a class="carousel-control-prev" href="#blog-carousel" data-slide="prev">
+                    <span class="carousel-control-prev-icon"></span>
+                </a>
+                <a class="carousel-control-next" href="#blog-carousel" data-slide="next">
+                    <span class="carousel-control-next-icon"></span>
+                </a>
+            </div>
+        </div>
+    </div>
+    <!-- Carousel End -->
+
+    <!-- Back to Top -->
+    <a href="#" class="btn btn-primary back-to-top"><i class="fa fa-angle-double-up"></i></a>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
+    <script src="lib/easing/easing.min.js"></script>
+    <script src="lib/waypoints/waypoints.min.js"></script>
+    <script src="lib/owlcarousel/owl.carousel.min.js"></script>
+    <script src="lib/tempusdominus/js/moment.min.js"></script>
+    <script src="lib/tempusdominus/js/moment-timezone.min.js"></script>
+    <script src="lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js"></script>
+
+    <!-- Contact Javascript File -->
+    <script src="mail/jqBootstrapValidation.min.js"></script>
+    <script src="mail/contact.js"></script>
+
+    <!-- Template Javascript -->
+    <script src="js/main.js"></script>
+</body>
+
+</html>

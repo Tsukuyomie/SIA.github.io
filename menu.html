@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>S|A- Daily Sentiment Analyzer</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="Free Website Template" name="keywords">
+    <meta content="Free Website Template" name="description">
+
+    <!-- Favicon -->
+    <link href="img/favicon.ico" rel="icon">
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;400&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet"> 
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Libraries Stylesheet -->
+    <link href="lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
+    <link href="lib/tempusdominus/css/tempusdominus-bootstrap-4.min.css" rel="stylesheet" />
+
+    <!-- Customized Bootstrap Stylesheet -->
+    <link href="css/style.min.css" rel="stylesheet">
+
+    <!-- Custom Stylesheet -->
+    <style>
+body {
+  font-family: 'Montserrat', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+.metal-batteries-section {
+  padding: 100px 0;
+  background-color: #f0f0f0;
+  position: relative;
+  overflow: hidden;
+}
+
+.section-title {
+  margin-bottom: 60px;
+  text-align: center;
+}
+
+.section-title h4 {
+  color: #0077b6;
+  letter-spacing: 3px;
+  font-weight: 700;
+  font-size: 24px;
+  text-transform: uppercase;
+  position: relative;
+  padding-bottom: 15px;
+}
+
+.section-title h4::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 3px;
+  background-color: #0077b6;
+}
+
+.metal-batteries-item {
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.metal-batteries-item:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+}
+
+.metal-batteries-item img {
+  width: 100%;
+  height: auto;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  transition: transform 0.3s;
+}
+
+.metal-batteries-item:hover img {
+  transform: scale(1.05);
+}
+
+.metal-batteries-item h4 {
+  margin: 20px 0 10px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.metal-batteries-item p {
+  margin-bottom: 20px;
+  color: #666;
+  font-size: 14px;
+}
+
+.metal-batteries-item a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.switch-container {
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 200px;
+  background-color: #0077b6;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  transition: opacity 0.3s;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.switch-container.show {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.switch {
+  position: relative;
+  width: 80%;
+  height: 30%;
+  background-color: #fff;
+  border-radius: 15px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0077b6;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s, color 0.3s, transform 0.3s;
+  padding: 5px 0;
+}
+
+.switch.active,
+.switch:hover {
+  background-color: #0077b6;
+  color: #fff;
+  transform: scale(1.1);
+}
+
+.switch-text {
+  position: absolute;
+  top: 50%;
+  right: 50px;
+  transform: translateY(-50%);
+  color: #1e0606;
+  font-weight: 600;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+}
+
+.metal-batteries-section.active .section-title h4 {
+  color: #0077b6;
+  font-size: 28px;
+}
+      </style>
+</head>
+
+<body>
+    <!-- Navbar Start -->
+    <div class="container-fluid p-0 nav-bar">
+        <nav class="navbar navbar-expand-lg bg-none navbar-dark py-3">
+            <a href="index.html" class="navbar-brand px-lg-4 m-0">
+                <h1 class="m-0 display-4 text-uppercase text-white">S|A</h1>
+            </a>
+            <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarCollapse">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-between" id="navbarCollapse">
+                <div class="navbar-nav ml-auto p-4">
+                    <a href="index.html" class="nav-item nav-link">Home</a>
+                    <a href="menu.html" class="nav-item nav-link">Commodities</a>
+                    <a href="intheknow.html" class="nav-item nav-link">In The Know!</a>
+                    <a href="contact.html" class="nav-item nav-link">Contact</a>
+                </div>
+                <form class="form-inline ml-3 my-lg-0 search-bar">
+                    <input class="form-control mr-sm-2 search-input" type="search" placeholder="Search" aria-label="Search">
+                    <button class="btn btn-outline-success my-2 my-sm-0 search-button" type="submit">Search</button>
+                </form>
+            </div>
+        </nav>
+    </div>
+    <!-- Navbar End -->
+
+    <!-- Page Header Start -->
+    <div class="container-fluid page-header mb-5 position-relative">
+        <div class="d-flex flex-column align-items-center justify-content-center pt-0 pt-lg-5" style="min-height: 400px">
+            <h1 class="display-4 mb-3 mt-0 mt-lg-5 text-white text-uppercase">Commodities & Battery Scrap</h1>
+            <div class="d-inline-flex mb-lg-5">
+                <p class="m-0 text-white"><a class="text-white" href="index.html">Home</a></p>
+                <p class="m-0 text-white px-2">/</p>
+                <p class="m-0 text-white">Commodities & Battery Scrap</p>
+            </div>
+        </div>
+    </div>
+    <!-- Page Header End -->
+
+    <!-- Metals & Analysis Section Start -->
+    <div id="metals-section" class="container metal-batteries-section">
+        <div class="section-title">
+            <h4 class="text-primary text-uppercase">Metals & Analysis</h4>
+            <h1 class="display-4">Explore Metals</h1>
+        </div>
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="metal-batteries-item mb-5">
+                    <a href="lithium.html">
+                        <img src="img/copper-1081825_1280.jpg" alt="Lithium">
+                        <div class="p-4">
+                            <h4>Lithium</h4>
+                            <p>Sit lorem ipsum et diam elitr est dolor sed duo guberg sea et et lorem dolor</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="metal-batteries-item mb-5">
+                    <a href="CMC.html">
+                        <img src="img/stole-3419985_1280.jpg" alt="CMPGM's">
+                        <div class="p-4">
+                            <h4>PGM's</h4>
+                            <p>Sit lorem ipsum et diam elitr est dolor sed duo guberg sea et et lorem dolor</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="metal-batteries-item mb-5">
+                    <a href="nickel.html">
+                        <img src="img/bullion-932218_1280.jpg" alt="Nickel">
+                        <div class="p-4">
+                            <h4>Nickel</h4>
+                            <p>Sit lorem ipsum et diam elitr est dolor sed duo guberg sea et et lorem dolor</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="metal-batteries-item mb-5">
+                    <a href="cobalt.html">
+                        <img src="img/quartz-stone-8068478_1280.jpg" alt="Cobalt">
+                        <div class="p-4">
+                            <h4>Cobalt</h4>
+                            <p>Sit lorem ipsum et diam elitr est dolor sed duo guberg sea et et lorem dolor</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Metals & Analysis Section End -->
+
+    <!-- Batteries Section Start -->
+    <div id="batteries-section" class="container metal-batteries-section">
+        <div class="section-title">
+            <h4 class="text-primary text-uppercase">Battery Scrap</h4>
+            <h1 class="display-4">Explore Batteries</h1>
+        </div>
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="metal-batteries-item mb-5">
+                    <a href="lithium.html">
+                        <img src="img/copper-1081825_1280.jpg" alt="LFP">
+                        <div class="p-4">
+                            <h4>LFP</h4>
+                            <p>Sit lorem ipsum et diam elitr est dolor sed duo guberg sea et et lorem dolor</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="metal-batteries-item mb-5">
+                    <a href="CMC.html">
+                        <img src="img/stole-3419985_1280.jpg" alt="LMO">
+                        <div class="p-4">
+                            <h4>LMO</h4>
+                            <p>Sit lorem ipsum et diam elitr est dolor sed duo guberg sea et et lorem dolor</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="metal-batteries-item mb-5">
+                    <a href="nickel.html">
+                        <img src="img/bullion-932218_1280.jpg" alt="NMC">
+                        <div class="p-4">
+                            <h4>NMC</h4>
+                            <p>Sit lorem ipsum et diam elitr est dolor sed duo guberg sea et et lorem dolor</p>
+                        </div>
+                    </a>
+                </div>
+                <div class="metal-batteries-item mb-5">
+                    <a href="cobalt.html">
+                        <img src="img/quartz-stone-8068478_1280.jpg" alt="LCO">
+                        <div class="p-4">
+                            <h4>LCO</h4>
+                            <p>Sit lorem ipsum et diam elitr est dolor sed duo guberg sea et et lorem dolor</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Batteries Section End -->
+
+    <!-- Scroll Switch -->
+    <div class="switch-container" id="scroll-switch">
+        <div class="switch" data-target="#metals-section">
+            <div class="switch-text">Metals</div>
+        </div>
+        <div class="switch" data-target="#batteries-section">
+            <div class="switch-text">Batteries</div>
+            
+        </div>
+    </div>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
+    <script src="lib/easing/easing.min.js"></script>
+    <script src="lib/waypoints/waypoints.min.js"></script>
+    <script src="lib/owlcarousel/owl.carousel.min.js"></script>
+    <script src="lib/tempusdominus/js/moment.min.js"></script>
+    <script src="lib/tempusdominus/js/moment-timezone.min.js"></script>
+    <script src="lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js"></script>
+
+    <!-- Template Javascript -->
+    <script src="js/main.js"></script>
+
+    <!-- Custom Javascript -->
+    <script>
+        $(document).ready(function() {
+            // Show switch when scrolling to metal and batteries section
+            $(window).on('scroll', function() {
+                var scrollPosition = $(window).scrollTop();
+                var metalsOffset = $('#metals-section').offset().top;
+                var batteriesOffset = $('#batteries-section').offset().top;
+
+                if (scrollPosition >= metalsOffset - 200 && scrollPosition <= batteriesOffset + $('#batteries-section').height()) {
+                    $('#scroll-switch').addClass('show');
+                } else {
+                    $('#scroll-switch').removeClass('show');
+                }
+            });
+
+            // Smooth scroll to section
+            $('.switch').on('click', function() {
+                var target = $($(this).data('target'));
+                $('html, body').animate({
+                    scrollTop: target.offset().top
+                }, 1000);
+            });
+        });
+    </script>
+     <!-- Footer Start -->
+     <div class="container-fluid bg-dark text-white mt-5 py-5 px-sm-3 px-md-5">
+        <div class="row pt-5">
+            <div class="col-lg-3 col-md-6 mb-5">
+                <h4 class="text-primary text-uppercase mb-4" style="letter-spacing: 5px;">Get In Touch</h4>
+                <p><i class="fa fa-map-marker-alt mr-2"></i>D-184, LOHUM, INDIA</p>
+                <p><i class="fa fa-phone-alt mr-2"></i>+012 345 67890</p>
+                <p><i class="fa fa-envelope mr-2"></i>info@example.com</p>
+                <div class="d-flex justify-content-start mt-4">
+                    <a class="btn btn-outline-light btn-square mr-2" href="#"><i class="fab fa-twitter"></i></a>
+                    <a class="btn btn-outline-light btn-square mr-2" href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a class="btn btn-outline-light btn-square mr-2" href="#"><i class="fab fa-linkedin-in"></i></a>
+                    <a class="btn btn-outline-light btn-square" href="#"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-5">
+                <h4 class="text-primary text-uppercase mb-4" style="letter-spacing: 5px;">Our Services</h4>
+                <div class="d-flex flex-column justify-content-start">
+                    <a class="text-white mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Market Analysis</a>
+                    <a class="text-white mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>News & Updates</a>
+                    <a class="text-white mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Price Tracking</a>
+                    <a class="text-white" href="#"><i class="fa fa-angle-right mr-2"></i>Daily Sentiment Analyzer</a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-5">
+                <h4 class="text-primary text-uppercase mb-4" style="letter-spacing: 5px;">Useful Links</h4>
+                <div class="d-flex flex-column justify-content-start">
+                    <a class="text-white mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Private Policy</a>
+                    <a class="text-white mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Terms & Conditions</a>
+                    <a class="text-white mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>New Member Registration</a>
+                    <a class="text-white" href="#"><i class="fa fa-angle-right mr-2"></i>Help & FQAs</a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-5">
+                <h4 class="text-primary text-uppercase mb-4" style="letter-spacing: 5px;">Newsletter</h4>
+                <p>Sign up for our newsletter to stay up to date with the latest news and offers!</p>
+                <div class="w-100">
+                    <div class="input-group">
+                        <input type="text" class="form-control border-light" style="padding: 25px;" placeholder="Your Email Address">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary text-uppercase px-3">Sign Up</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="container border-top border-dark pt-5">
+            <p class="m-0 text-center text-white">&copy; <a class="text-primary font-weight-bold" href="#">DETx</a>. All Rights Reserved. <a class="text-primary font-weight-bold" href="https://hx.com"></a></p>
+        </div>
+    </div>
+    <!-- Footer End -->
+
+    <!-- Back to Top -->
+    <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="fa fa-angle-double-up"></i></a>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
+    <script src="lib/easing/easing.min.js"></script>
+    <script src="lib/waypoints/waypoints.min.js"></script>
+    <script src="lib/owlcarousel/owl.carousel.min.js"></script>
+    <script src="lib/tempusdominus/js/moment.min.js"></script>
+    <script src="lib/tempusdominus/js/moment-timezone.min.js"></script>
+    <script src="lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js"></script>
+
+    <!-- Contact Javascript File -->
+    <script src="mail/jqBootstrapValidation.min.js"></script>
+    <script src="mail/contact.js"></script>
+
+    <!-- Template Javascript -->
+    <script src="js/main.js"></script>
+</body>
+
+</html>
+
+</body>
+
+</html>

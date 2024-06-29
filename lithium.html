@@ -1,0 +1,755 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>S|A- Daily Sentiment Analyzer</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="Free Website Template" name="keywords">
+    <meta content="Free Website Template" name="description">
+
+    <!-- Favicon -->
+    <link href="img/favicon.ico" rel="icon">
+
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;400&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Libraries Stylesheet -->
+    <link href="lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
+    <link href="lib/tempusdominus/css/tempusdominus-bootstrap-4.min.css" rel="stylesheet" />
+
+    <!-- Customized Bootstrap Stylesheet -->
+    <link href="css/style.min.css" rel="stylesheet">
+
+    <!-- ApexCharts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <style>
+        .chart-container {
+            background: #1f1f1f; /* Matching background */
+            border-radius: 20px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* Increased shadow */
+            padding: 20px;
+        }
+    </style>
+    <style>
+        /* Add this to your existing CSS file */
+.card {
+    background-color: transparent;
+    border: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 2rem;
+    cursor: pointer;
+}
+
+.card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.card-body {
+    background-color: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+}
+
+.card-body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
+    pointer-events: none;
+}
+
+.card-footer {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    padding: 0.75rem 1.5rem;
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+}
+
+.card-img-container {
+    overflow: hidden;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+}
+
+.card-img-container img {
+    transition: transform 0.3s ease;
+}
+
+.card:hover .card-img-container img {
+    transform: scale(1.1);
+}
+
+.read-more {
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.read-more:hover {
+    background-color: #007bff;
+    transform: translateY(-2px);
+}
+
+.news-card {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .card-body, .card-footer {
+        text-align: center;
+    }
+}
+    </style>
+    <script>
+        
+        async function fetchNews() {
+            const apiKey = '8377b5804bb3b1ebe4e967824b326a4'; // Replace with your valid GNews API key
+            const response = await fetch(`https://gnews.io/api/v4/search?q=Lithium&token=${apiKey}&lang=en&sortby=publishedAt&from=2023-05-10`);
+            const data = await response.json();
+            return data.articles;
+        }
+
+        function displayNews(articles) {
+    const newsContainer = document.getElementById('news-container');
+    newsContainer.innerHTML = ''; // Clear any existing content
+
+    articles.forEach(article => {
+        const newsItem = document.createElement('div');
+        newsItem.className = 'col-lg-4 col-md-6 mb-4';
+        newsItem.innerHTML = `
+            <div class="card h-100 news-card">
+                <div class="card-img-container">
+                    <img class="card-img-top" src="${article.image}" alt="News Image" style="height: 200px; object-fit: cover;">
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">${article.title}</h5>
+                    <p class="card-text">${article.description.slice(0, 100)}...</p>
+                    <a href="${article.url}" target="_blank" class="btn btn-primary read-more">Read More</a>
+                </div>
+                <div class="card-footer">
+                    <small class="text-light">${new Date(article.publishedAt).toLocaleDateString()}</small>
+                </div>
+            </div>
+        `;
+        newsContainer.appendChild(newsItem);
+    });
+}
+
+        async function loadNews() {
+            try {
+                const articles = await fetchNews();
+                displayNews(articles);
+            } catch (error) {
+                console.error("Error loading news:", error);
+            }
+        }
+
+        async function fetchMongoData(url) {
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        console.log('Raw data from server:', data);
+        const processedData = data.map(item => ({
+            x: item.Hour ? item.Hour : new Date(item.Date).getTime(),
+            y: parseFloat(item.Avg || item.SS)
+        }));
+        console.log('Processed data:', processedData);
+        return processedData;
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        return [];
+    }
+}
+
+async function createChart(chartId, apiUrl, chartType) {
+    const isChart1 = chartId === '#chart1';
+    let data = await fetchMongoData(apiUrl);
+    if (!data || data.length === 0) {
+        console.error('No data available.');
+        return;
+    }
+
+    // Sort data by x value
+    data.sort((a, b) => a.x - b.x);
+
+    // Show only the latest 5 entries for chart1
+    if (isChart1) {
+        data = data.slice(-5);
+    }
+
+    const options = {
+        chart: {
+            type: chartType,
+            height: 400,
+            toolbar: {
+                show: true
+            },
+            zoom: {
+                enabled: true,
+                type: 'x',
+                autoScaleYaxis: true
+            },
+            animations: {
+                enabled: true,
+                easing: 'easeinout',
+                speed: 800
+            }
+        },
+        series: [{
+            name: isChart1 ? 'Price of Lithium' : 'Sentiment Score',
+            data: data
+        }],
+        xaxis: {
+            type: isChart1 ? 'datetime' : 'category',
+            title: {
+                text: isChart1 ? 'Date' : 'Hour',
+                style: {
+                    color: '#FFFFFF',
+                    fontSize: '14px'
+                }
+            },
+            labels: {
+                formatter: function(val) {
+                    if (isChart1) {
+                        const date = new Date(val);
+                        return `${date.getMonth() + 1}/${date.getDate()}`;
+                    }
+                    return val;
+                },
+                style: {
+                    colors: '#FFFFFF',
+                    fontSize: '10px'
+                },
+                rotate: 0,
+                hideOverlappingLabels: false,
+                trim: false
+            },
+            tickAmount: isChart1 ? data.length : undefined,
+            axisBorder: {
+                show: true,
+                color: '#78909C'
+            },
+            axisTicks: {
+                show: true,
+                color: '#78909C'
+            }
+        },
+        yaxis: {
+            title: {
+                text: isChart1 ? 'Price (USD/mt)' : 'Sentiment Score',
+                style: {
+                    color: '#FFFFFF',
+                    fontSize: '14px'
+                }
+            },
+            labels: {
+                formatter: function(val) {
+                    return val.toFixed(2);
+                },
+                style: {
+                    colors: '#FFFFFF',
+                    fontSize: '12px'
+                }
+            },
+            decimalsInFloat: 2
+        },
+        title: {
+            text: isChart1 ? 'Lithium Price Over Time' : 'Sentiment Score Throughout The Day',
+            align: 'center',
+            style: {
+                color: '#FFFFFF',
+                fontSize: '16px'
+            }
+        },
+        tooltip: {
+            x: {
+                formatter: function(val) {
+                    return isChart1 ? new Date(val).toLocaleDateString() : val;
+                }
+            },
+            y: {
+                formatter: function(val) {
+                    return val.toFixed(2);
+                }
+            },
+            shared: true,
+            intersect: false
+        },
+        fill: {
+            type: 'gradient',
+            gradient: {
+                shade: 'dark',
+                type: 'vertical',
+                shadeIntensity: 0.5,
+                opacityFrom: 0.6,
+                opacityTo: 0.3,
+                stops: [0, 100]
+            }
+        },
+        stroke: {
+            curve: 'smooth',
+            width: 4,
+            colors: ['#3ee820']
+        },
+        colors: ['#2196F3'],
+        markers: {
+            size: 5,
+            colors: '#FFFFFF',
+            strokeColors: '#2196F3',
+            strokeWidth: 3
+        },
+        grid: {
+            show: true,
+            borderColor: '#444',
+            xaxis: {
+                lines: {
+                    show: true
+                }
+            },
+            yaxis: {
+                lines: {
+                    show: true
+                }
+            }
+        },
+        legend: {
+            show: true,
+            position: 'top',
+            horizontalAlign: 'center',
+            itemClick: {
+                toggleDataSeries: true
+            }
+        },
+        annotations: {
+            xaxis: [
+                {
+                    x: new Date('2024-01-01').getTime(),
+                    borderColor: '#FF9800',
+                    label: {
+                        borderColor: '#FF9800',
+                        style: {
+                            color: '#fff',
+                            background: '#FF9800'
+                        },
+                        text: 'Important Event'
+                    }
+                }
+            ]
+        }
+    };
+
+    console.log('Chart options:', options);
+    const chart = new ApexCharts(document.querySelector(chartId), options);
+    chart.render();
+}
+
+window.onload = async () => {
+    console.log('Window loaded');
+    try {
+        console.log('Creating chart 1');
+        await createChart('#chart1', '/api/lithium-price', 'line');
+        console.log('Chart 1 created');
+        console.log('Creating chart 2');
+        await createChart('#chart2', '/api/sentiments', 'bar');
+        console.log('Chart 2 created');
+        console.log('Loading news');
+        await loadNews();
+        console.log('News loaded');
+    } catch (error) {
+        console.error('Error initializing page:', error);
+    }
+};
+
+
+</script>
+   <script src="https://cdn.amcharts.com/lib/5/index.js"></script> 
+   <script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
+   <script src="https://cdn.amcharts.com/lib/5/themes/Dark.js"></script>
+   <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+   <script src="https://cdn.amcharts.com/lib/5/stock.js"></script>
+       
+   
+   <script>
+     
+  document.addEventListener("DOMContentLoaded", function() {
+  const csvPath = 'NickelFuturesHistoricalData.csv'; // Replace with the path to your CSV file
+
+  fetch(csvPath)
+    .then(response => response.text())
+    .then(data => {
+      const parsedData = parseCSV(data);
+      renderChart(parsedData);
+    })
+    .catch(error => {
+      console.error('Error fetching the CSV file:', error);
+    });
+
+  function parseCSV(file) {
+    const rows = file.trim().split('\n');
+    const headers = rows[0].split(',').map(header => header.trim());
+    const data = [];
+
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i].split(',').map(item => item.trim());
+      if (row.length === headers.length) {
+        const obj = {};
+        for (let j = 0; j < headers.length; j++) {
+          let value = row[j];
+          if (headers[j] === 'Date') {
+            const [day, month, year] = value.split('-');
+            value = new Date(year, month - 1, day).getTime();
+          }
+          obj[headers[j]] = isNaN(value) ? value : parseFloat(value);
+        }
+        data.push(obj);
+      }
+    }
+    console.log("Parsed Data: ", data); // Debugging line
+    return data;
+  }
+
+  function renderChart(data) {
+    // Create root element
+    var root = am5.Root.new("amcharts");
+
+    // Set themes
+    root.setThemes([
+      am5themes_Animated.new(root)
+    ]);
+
+    // Create a stock chart
+    var stockChart = root.container.children.push(am5stock.StockChart.new(root, {}));
+
+    // Main (value) panel
+    var mainPanel = stockChart.panels.push(am5stock.StockPanel.new(root, {
+      wheelY: "zoomX",
+      panX: true,
+      panY: true
+    }));
+
+    // Create axes
+    var valueAxis = mainPanel.yAxes.push(am5xy.ValueAxis.new(root, {
+      renderer: am5xy.AxisRendererY.new(root, {})
+    }));
+
+    var dateAxis = mainPanel.xAxes.push(am5xy.GaplessDateAxis.new(root, {
+      baseInterval: {
+        timeUnit: "day",
+        count: 1
+      },
+      renderer: am5xy.AxisRendererX.new(root, {})
+    }));
+
+    // Add series for Close values
+    var closeSeries = mainPanel.series.push(am5xy.LineSeries.new(root, {
+      name: "Close",
+      valueXField: "Date",
+      valueYField: "Close",
+      xAxis: dateAxis,
+      yAxis: valueAxis,
+      legendValueText: "{valueY}"
+    }));
+
+    closeSeries.data.setAll(data);
+
+    // Set main value series
+    stockChart.set("stockSeries", closeSeries);
+
+    // Add a stock legend
+    var valueLegend = mainPanel.plotContainer.children.push(am5stock.StockLegend.new(root, {
+      stockChart: stockChart
+    }));
+    valueLegend.data.setAll([closeSeries]);
+
+    // Secondary (volume) panel
+    var volumePanel = stockChart.panels.push(am5stock.StockPanel.new(root, {
+      wheelY: "zoomX",
+      panX: true,
+      panY: true,
+      height: am5.percent(30)
+    }));
+
+    // Create axes
+    var volumeValueAxis = volumePanel.yAxes.push(am5xy.ValueAxis.new(root, {
+      numberFormat: "#.#a",
+      renderer: am5xy.AxisRendererY.new(root, {})
+    }));
+
+    var volumeDateAxis = volumePanel.xAxes.push(am5xy.GaplessDateAxis.new(root, {
+      baseInterval: {
+        timeUnit: "day",
+        count: 1
+      },
+      renderer: am5xy.AxisRendererX.new(root, {})
+    }));
+
+    // Add series for Volume values
+    var volumeSeries = volumePanel.series.push(am5xy.ColumnSeries.new(root, {
+      name: "Volume",
+      valueXField: "Date",
+      valueYField: "Volume",
+      xAxis: volumeDateAxis,
+      yAxis: volumeValueAxis,
+      legendValueText: "{valueY}"
+    }));
+
+    volumeSeries.data.setAll(data);
+
+    // Set main value series
+    stockChart.set("volumeSeries", volumeSeries);
+
+    // Add a stock legend
+    var volumeLegend = volumePanel.plotContainer.children.push(am5stock.StockLegend.new(root, {
+      stockChart: stockChart
+    }));
+    volumeLegend.data.setAll([volumeSeries]);
+
+    // Add cursor(s)
+    mainPanel.set("cursor", am5xy.XYCursor.new(root, {
+      yAxis: valueAxis,
+      xAxis: dateAxis,
+      snapToSeries: [closeSeries],
+      snapToSeriesBy: "y!"
+    }));
+
+    volumePanel.set("cursor", am5xy.XYCursor.new(root, {
+      yAxis: volumeValueAxis,
+      xAxis: volumeDateAxis,
+      snapToSeries: [volumeSeries],
+      snapToSeriesBy: "y!"
+    }));
+
+    // Add scrollbar
+    var scrollbar = mainPanel.set("scrollbarX", am5xy.XYChartScrollbar.new(root, {
+      orientation: "horizontal",
+      height: 50
+    }));
+    stockChart.toolsContainer.children.push(scrollbar);
+
+    var sbDateAxis = scrollbar.chart.xAxes.push(am5xy.GaplessDateAxis.new(root, {
+      baseInterval: {
+        timeUnit: "day",
+        count: 1
+      },
+      renderer: am5xy.AxisRendererX.new(root, {})
+    }));
+
+    var sbValueAxis = scrollbar.chart.yAxes.push(am5xy.ValueAxis.new(root, {
+      renderer: am5xy.AxisRendererY.new(root, {})
+    }));
+
+    var sbSeries = scrollbar.chart.series.push(am5xy.LineSeries.new(root, {
+      valueYField: "Close",
+      valueXField: "Date",
+      xAxis: sbDateAxis,
+      yAxis: sbValueAxis
+    }));
+
+    sbSeries.fills.template.setAll({
+      visible: true,
+      fillOpacity: 0.3
+    });
+
+    sbSeries.data.setAll(data);
+
+    // Add toolbar
+    var toolbar = am5stock.StockToolbar.new(root, {
+      container: document.getElementById("chartcontrols"),
+      stockChart: stockChart,
+      controls: [
+        am5stock.IndicatorControl.new(root, {
+          stockChart: stockChart
+        })
+      ]
+    });
+  }
+});
+   </script>
+   </head>
+
+<body>
+    <!-- Navbar Start -->
+    <div class="container-fluid p-0 nav-bar">
+        <nav class="navbar navbar-expand-lg bg-none navbar-dark py-3">
+            <a href="index.html" class="navbar-brand px-lg-4 m-0">
+                <h1 class="m-0 display-4 text-uppercase text-white">S|A</h1>
+            </a>
+            <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarCollapse">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-between" id="navbarCollapse">
+                <div class="navbar-nav ml-auto p-4">
+                    <a href="index.html" class="nav-item nav-link">Home</a>
+                    <!--<a href="about.html" class="nav-item nav-link">About</a>
+                    <a href="service.html" class="nav-item nav-link active">Service</a>-->
+                    <a href="menu.html" class="nav-item nav-link">Commodities</a>
+                    <a href="intheknow.html" class="nav-item nav-link">In The Know!</a>
+                    <!--<div class="nav-item dropdown">
+                        <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">Pages</a>
+                        <div class="dropdown-menu text-capitalize">
+                            <a href="reservation.html" class="dropdown-item">Consult Us</a>
+                            <a href="testimonial.html" class="dropdown-item">Testimonial</a>
+                        </div>
+                    </div>-->
+                    <a href="contact.html" class="nav-item nav-link">Contact</a>
+                </div>
+            </div>
+        </nav>
+    </div>
+    <!-- Navbar End -->
+
+    <!-- Page Header Start -->
+    <div class="container-fluid page-header mb-5 position-relative">
+        <div class="d-flex flex-column align-items-center justify-content-center pt-0 pt-lg-5" style="min-height: 400px">
+            <h1 class="display-4 mb-3 mt-0 mt-lg-5 text-white text-uppercase">Lithium</h1>
+            <div class="d-inline-flex mb-lg-5">
+                <p class="m-0 text-white"><a class="text-white" href="index.html">Home</a></p>
+                <p class="m-0 text-white px-2">/</p>
+                <p class="m-0 text-white">Lithium</p>
+            </div>
+        </div>
+    </div>
+    <!-- Page Header End -->
+
+    <!-- Chart Start -->
+    <div class="container-fluid pt-5">
+        <div class="container">
+            <div class="section-title text-center mb-5">
+                <h4 class="text-primary text-uppercase" style="letter-spacing: 5px;">Lithium Price Variation</h4>
+                <h1 class="display-4"></h1>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="chart-container">
+                        <div id="chart1"></div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="chart-container">
+                        <div id="chart2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Chart End -->
+    
+    <!-- AmChart Start -->
+<div class="container-fluid pt-5">
+    <div class="container">
+        <div class="section-title">
+            <h4 class="text-primary text-uppercase" style="letter-spacing: 5px;">Technical Analysis</h4>
+            <h1 class="display-4"></h1>
+        </div>
+        <div class="row">
+            <div id="chartcontrols" style="width: 100%; height: 50px;"></div>
+            <div id="amcharts" style="width: 100%; height: 500px;"></div>
+            
+        </div>
+    </div>
+</div>
+<!-- AmChart End -->
+
+   <!-- Service Start -->
+<div class="container-fluid pt-5">
+    <div class="container">
+        <div class="section-title text-center mb-5">
+            <h4 class="text-primary text-uppercase" style="letter-spacing: 5px;">News & Market Updates</h4>
+            <h1 class="display-4">Latest Insights</h1>
+        </div>
+        <div class="row justify-content-center" id="news-container">
+            <!-- News articles will be injected here -->
+        </div>
+    </div>
+</div>
+<!-- Service End -->
+    <!-- Footer Start -->
+    <div class="container-fluid bg-dark text-white mt-5 py-5 px-sm-3 px-md-5">
+        <div class="row pt-5">
+            <div class="col-lg-3 col-md-6 mb-5">
+                <h4 class="text-primary text-uppercase mb-4" style="letter-spacing: 5px;">Get In Touch</h4>
+                <p><i class="fa fa-map-marker-alt mr-2"></i>D-184, LOHUM, INDIA</p>
+                <p><i class="fa fa-phone-alt mr-2"></i>+012 345 67890</p>
+                <p><i class="fa fa-envelope mr-2"></i>info@example.com</p>
+                <div class="d-flex justify-content-start mt-4">
+                    <a class="btn btn-outline-light btn-square mr-2" href="#"><i class="fab fa-twitter"></i></a>
+                    <a class="btn btn-outline-light btn-square mr-2" href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a class="btn btn-outline-light btn-square mr-2" href="#"><i class="fab fa-linkedin-in"></i></a>
+                    <a class="btn btn-outline-light btn-square" href="#"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-5">
+                <h4 class="text-primary text-uppercase mb-4" style="letter-spacing: 5px;">Our Services</h4>
+                <div class="d-flex flex-column justify-content-start">
+                    <a class="text-white mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Market Analysis</a>
+                    <a class="text-white mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>News & Updates</a>
+                    <a class="text-white mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Price Tracking</a>
+                    <a class="text-white" href="#"><i class="fa fa-angle-right mr-2"></i>Daily Sentiment Analyzer</a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-5">
+                <h4 class="text-primary text-uppercase mb-4" style="letter-spacing: 5px;">Useful Links</h4>
+                <div class="d-flex flex-column justify-content-start">
+                    <a class="text-white mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Private Policy</a>
+                    <a class="text-white mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>Terms & Conditions</a>
+                    <a class="text-white mb-2" href="#"><i class="fa fa-angle-right mr-2"></i>New Member Registration</a>
+                    <a class="text-white" href="#"><i class="fa fa-angle-right mr-2"></i>Help & FQAs</a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-5">
+                <h4 class="text-primary text-uppercase mb-4" style="letter-spacing: 5px;">Newsletter</h4>
+                <p>Sign up for our newsletter to stay up to date with the latest news and offers!</p>
+                <div class="w-100">
+                    <div class="input-group">
+                        <input type="text" class="form-control border-light" style="padding: 25px;" placeholder="Your Email Address">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary text-uppercase px-3">Sign Up</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="container border-top border-dark pt-5">
+            <p class="m-0 text-center text-white">&copy; <a class="text-primary font-weight-bold" href="#">DETx</a>. All Rights Reserved. <a class="text-primary font-weight-bold" href="https://hx.com"></a></p>
+        </div>
+    </div>
+    <!-- Footer End -->
+
+    <!-- Back to Top -->
+    <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="fa fa-angle-double-up"></i></a>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
+    <script src="lib/easing/easing.min.js"></script>
+    <script src="lib/waypoints/waypoints.min.js"></script>
+    <script src="lib/owlcarousel/owl.carousel.min.js"></script>
+    <script src="lib/tempusdominus/js/moment.min.js"></script>
+    <script src="lib/tempusdominus/js/moment-timezone.min.js"></script>
+    <script src="lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js"></script>
+
+    <!-- Contact Javascript File -->
+    <script src="mail/jqBootstrapValidation.min.js"></script>
+    <script src="mail/contact.js"></script>
+
+    <!-- Template Javascript -->
+    <script src="js/main.js"></script>
+</body>
+
+</html>
